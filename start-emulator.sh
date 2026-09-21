@@ -49,9 +49,15 @@ if [ "$GPU_MODE" = "host" ] && [ ! -e /dev/dri/renderD128 ] && [ ! -e /dev/dri/c
   GPU_MODE=swiftshader_indirect
 fi
 
+CPU_CORES="${CPU_CORES:-4}"
+RAM_SIZE="${RAM_SIZE:-4096}"
+REFRESH_RATE="${REFRESH_RATE:-60}"
 if [ -f "$CONFIG_FILE" ]; then
   update_config "hw.gpu.enabled" "yes"
   update_config "hw.gpu.mode" "$GPU_MODE"
+  update_config "hw.cpu.ncore" "$CPU_CORES"
+  update_config "hw.ramSize" "$RAM_SIZE"
+  update_config "hw.lcd.vsync" "$REFRESH_RATE"
 fi
 
 if [ "$GPU_MODE" = "host" ]; then
@@ -74,7 +80,8 @@ if [ "$GPU_MODE" = "host" ]; then
     xdpyinfo -display "$DISPLAY" >/dev/null 2>&1
   }
   if ! display_live; then
-    rm -f "/tmp/.X11-unix/X${disp_num}"
+    pkill -9 Xorg >/dev/null 2>&1 || true
+    rm -f "/tmp/.X11-unix/X${disp_num}" "/tmp/.X${disp_num}-lock"
     mkdir -p /tmp/.X11-unix /var/log
     xorg_conf="${XORG_HEADLESS_CONF:-/etc/X11/xorg-headless.conf}"
     if command -v Xorg >/dev/null 2>&1 && [ -e /dev/dri/card0 ] && [ -f "$xorg_conf" ]; then
@@ -97,9 +104,11 @@ if [ "$GPU_MODE" = "host" ]; then
     export LD_PRELOAD="${HOOK}${LD_PRELOAD:+:$LD_PRELOAD}"
     echo "Using EGL GBM hook on /dev/dri/renderD128"
   fi
+  export vblank_mode="${vblank_mode:-0}"
+  export mesa_glthread="${mesa_glthread:-true}"
 fi
 
-echo "Starting emulator GPU_MODE=${GPU_MODE} dri=$(ls /dev/dri 2>/dev/null | tr '\n' ' ')"
+echo "Starting emulator GPU_MODE=${GPU_MODE} cores=${CPU_CORES} ram=${RAM_SIZE} vsync=${REFRESH_RATE} dri=$(ls /dev/dri 2>/dev/null | tr '\n' ' ')"
 
 # Start the emulator with the appropriate ramdisk.img
-/opt/android-sdk/emulator/emulator -avd android -nojni -netfast -writable-system -no-window -no-audio -no-boot-anim -skip-adb-auth -gpu "$GPU_MODE" -no-snapshot -no-metrics $RAMDISK -qemu -m ${RAM_SIZE:-4096}
+/opt/android-sdk/emulator/emulator -avd android -nojni -netfast -writable-system -no-window -no-audio -no-boot-anim -skip-adb-auth -gpu "$GPU_MODE" -cores "$CPU_CORES" -no-snapshot -no-metrics $RAMDISK -qemu -m "$RAM_SIZE"

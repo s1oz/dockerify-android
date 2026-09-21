@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>dockerify-android</Name>
+  <Repository>ghcr.io/s1oz/dockerify-android:latest</Repository>
+  <Registry>https://github.com/s1oz/dockerify-android/pkgs/container/dockerify-android</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <MyMAC/>
+  <Shell>sh</Shell>
+  <Privileged>true</Privileged>
+  <Support>https://github.com/s1oz/dockerify-android/blob/gpu/FORK.md</Support>
+  <Project>https://github.com/s1oz/dockerify-android</Project>
+  <ReadMe>https://github.com/s1oz/dockerify-android/blob/gpu/FORK.md</ReadMe>
+  <Overview>QEMU Android 模拟器（核显 Mesa）。镜像由 fork 的 gpu 分支自动构建：上游 Shmayro 更新会 rebase 后再发布到 ghcr.io/s1oz/dockerify-android。&#13;
+&#13;
+使用：&#13;
+1. GitHub Packages 把 dockerify-android 设为 Public，或在 Unraid 登录 ghcr.io&#13;
+2. Docker → 添加容器 → 选择此模板&#13;
+3. 按需改环境变量后应用&#13;
+4. scrcpy 连接 宿主机IP:5556&#13;
+5. CA Auto Update 勾选此容器即可跟 GHCR latest 自动更新（变量保留）&#13;
+&#13;
+数据在 /data，更新镜像不会丢游戏。</Overview>
+  <Category>Other:</Category>
+  <WebUI/>
+  <TemplateURL/>
+  <Icon>https://developer.android.com/static/images/logos/android.svg</Icon>
+  <ExtraParams>--memory=12g --device /dev/kvm --group-add 18</ExtraParams>
+  <PostArgs/>
+  <CPUset>2,3,4,10,11,12</CPUset>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="ADB 端口" Target="5555" Default="5555" Mode="tcp" Description="宿主机映射到容器 5555，scrcpy/adb 用这个端口" Type="Port" Display="always" Required="true" Mask="false">5556</Config>
+  <Config Name="数据目录" Target="/data" Default="" Mode="rw" Description="AVD/游戏/Magisk 持久化，不要删" Type="Path" Display="always" Required="true" Mask="false">/mnt/system/dockerfile/dockerify-android/data</Config>
+  <Config Name="extras 目录" Target="/extras" Default="" Mode="rw" Description="APK 等会拷到 /sdcard/Download" Type="Path" Display="always" Required="false" Mask="false">/mnt/system/dockerfile/dockerify-android/extras</Config>
+  <Config Name="核显 /dev/dri" Target="/dev/dri" Default="" Mode="" Description="GPU_MODE=host 必需" Type="Device" Display="always" Required="true" Mask="false">/dev/dri</Config>
+  <Config Name="GPU_MODE" Target="GPU_MODE" Default="host" Mode="" Description="host=核显 Mesa；swiftshader=CPU 软渲染" Type="Variable" Display="always" Required="true" Mask="false">host</Config>
+  <Config Name="DNS" Target="DNS" Default="dns.alidns.com" Mode="" Description="私人 DNS 主机名（DoT）。国内游戏用 dns.alidns.com，不要用 one.one.one.one" Type="Variable" Display="always" Required="false" Mask="false">dns.alidns.com</Config>
+  <Config Name="RAM_SIZE" Target="RAM_SIZE" Default="4096" Mode="" Description="Android 客机内存 MB。系统+游戏建议 6144（6G）" Type="Variable" Display="always" Required="false" Mask="false">6144</Config>
+  <Config Name="CPU_CORES" Target="CPU_CORES" Default="4" Mode="" Description="客机 vCPU 个数，建议与上方 CPU Pinning 逻辑核数量一致" Type="Variable" Display="always" Required="false" Mask="false">6</Config>
+  <Config Name="REFRESH_RATE" Target="REFRESH_RATE" Default="60" Mode="" Description="屏幕刷新率 Hz。30=省电；60=更跟手" Type="Variable" Display="always" Required="false" Mask="false">30</Config>
+  <Config Name="SHOW_FPS" Target="SHOW_FPS" Default="0" Mode="" Description="1=屏幕角落显示刷新率数字；0=关闭" Type="Variable" Display="always" Required="false" Mask="false">0</Config>
+  <Config Name="STAY_AWAKE" Target="STAY_AWAKE" Default="1" Mode="" Description="1=充电常亮+超长息屏（挂机）；0=15 秒息屏" Type="Variable" Display="always" Required="false" Mask="false">1</Config>
+  <Config Name="SCREEN_RESOLUTION" Target="SCREEN_RESOLUTION" Default="" Mode="" Description="分辨率 WIDTHxHEIGHT" Type="Variable" Display="always" Required="false" Mask="false">720x1280</Config>
+  <Config Name="SCREEN_DENSITY" Target="SCREEN_DENSITY" Default="" Mode="" Description="DPI" Type="Variable" Display="always" Required="false" Mask="false">180</Config>
+  <Config Name="ROOT_SETUP" Target="ROOT_SETUP" Default="0" Mode="" Description="1=Magisk root（已做过会跳过）" Type="Variable" Display="always" Required="false" Mask="false">1</Config>
+  <Config Name="GAPPS_SETUP" Target="GAPPS_SETUP" Default="0" Mode="" Description="1=PICO GAPPS" Type="Variable" Display="always" Required="false" Mask="false">0</Config>
+  <Config Name="ARM_TRANSLATION" Target="ARM_TRANSLATION" Default="0" Mode="" Description="1=ARM64 转译，跑 ARM 游戏" Type="Variable" Display="always" Required="false" Mask="false">1</Config>
+  <Config Name="ANDROID_EMULATOR_USE_SYSTEM_LIBS" Target="ANDROID_EMULATOR_USE_SYSTEM_LIBS" Default="1" Mode="" Description="核显必须为 1，否则 Mesa 加载失败" Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="QT_QPA_PLATFORM" Target="QT_QPA_PLATFORM" Default="offscreen" Mode="" Description="无窗口，画面只给 scrcpy" Type="Variable" Display="advanced" Required="false" Mask="false">offscreen</Config>
+</Container>

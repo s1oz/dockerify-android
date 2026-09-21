@@ -19,8 +19,13 @@ apply_settings() {
   adb shell settings put global window_animation_scale 0
   adb shell settings put global transition_animation_scale 0
   adb shell settings put global animator_duration_scale 0
-  adb shell settings put global stay_on_while_plugged_in 0
-  adb shell settings put system screen_off_timeout 15000
+  if bool_true "${STAY_AWAKE:-1}"; then
+    adb shell settings put global stay_on_while_plugged_in 3
+    adb shell settings put system screen_off_timeout 2147483647
+  else
+    adb shell settings put global stay_on_while_plugged_in 0
+    adb shell settings put system screen_off_timeout 15000
+  fi
   adb shell settings put system accelerometer_rotation 0
   adb shell settings put global private_dns_mode hostname
   adb shell settings put global private_dns_specifier ${DNS:-one.one.one.one}
@@ -28,6 +33,21 @@ apply_settings() {
   adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true
   adb shell svc data disable
   adb shell svc wifi enable
+  adb shell settings put global development_settings_enabled 1
+  adb shell settings put system peak_refresh_rate "${REFRESH_RATE:-60}"
+  adb shell settings put system min_refresh_rate "${REFRESH_RATE:-60}"
+  adb shell setprop debug.hwui.profile false
+  adb shell setprop debug.egl.swapinterval 1
+  if bool_true "${SHOW_FPS:-0}"; then
+    adb shell settings put secure show_refresh_rate 1
+    adb shell setprop debug.sf.showfps 1
+    adb shell setprop debug.sf.show_refresh_rate 1
+    adb shell 'service call SurfaceFlinger 1034 i32 1' >/dev/null 2>&1 || true
+  else
+    adb shell settings put secure show_refresh_rate 0
+    adb shell setprop debug.sf.showfps 0
+    adb shell setprop debug.sf.show_refresh_rate 0
+  fi
 }
 
 prepare_system() {

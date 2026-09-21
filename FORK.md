@@ -40,4 +40,15 @@ Daily at 03:17 UTC the workflow rebases `gpu` onto `Shmayro/main`:
 
 Blindly `docker pull shmayro/dockerify-android` after an upstream release does **not** keep GPU until they merge and publish that code.
 
-Personal Unraid settings (port 5556, DNS, APK mounts, `ROOT_SETUP`) stay in your local compose, not in this image.
+Personal Unraid settings (port, DNS, RAM, CPU pin, `ROOT_SETUP`) live in the Unraid template / environment variables, not in the image. Updating `latest` keeps GPU and picks up new env-driven defaults; your GUI values win.
+
+## Unraid GUI（推荐，和 redroid 一样管）
+
+模板：[`unraid/my-dockerify-android.xml`](unraid/my-dockerify-android.xml)
+
+1. 复制到 `/boot/config/plugins/dockerMan/templates-user/my-dockerify-android.xml`
+2. Docker → 添加容器 → 模板选 `dockerify-android`
+3. 变量在 GUI 里改，不要再 bind-mount `start-emulator.sh` / `first-boot.sh`（否则镜像自动更新改不了脚本）
+4. CA Auto Update 勾选该容器，跟 `ghcr.io/s1oz/dockerify-android:latest`
+
+环境变量（模板里都有中文说明）：`GPU_MODE` `DNS` `RAM_SIZE` `CPU_CORES` `REFRESH_RATE` `SHOW_FPS` `STAY_AWAKE` `SCREEN_RESOLUTION` `SCREEN_DENSITY` `ROOT_SETUP` `GAPPS_SETUP` `ARM_TRANSLATION`
