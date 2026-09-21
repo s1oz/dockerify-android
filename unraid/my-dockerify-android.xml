@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>dockerify-android</Name>
-  <Repository>ghcr.io/s1oz/dockerify-android:latest</Repository>
-  <Registry>https://github.com/s1oz/dockerify-android/pkgs/container/dockerify-android</Registry>
+  <Repository>s1oz/dockerify-android:latest</Repository>
+  <Registry>https://hub.docker.com/r/s1oz/dockerify-android</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <MyMAC/>
@@ -11,14 +11,13 @@
   <Support>https://github.com/s1oz/dockerify-android/blob/gpu/FORK.md</Support>
   <Project>https://github.com/s1oz/dockerify-android</Project>
   <ReadMe>https://github.com/s1oz/dockerify-android/blob/gpu/FORK.md</ReadMe>
-  <Overview>QEMU Android 模拟器（核显 Mesa）。镜像由 fork 的 gpu 分支自动构建：上游 Shmayro 更新会 rebase 后再发布到 ghcr.io/s1oz/dockerify-android。&#13;
+  <Overview>QEMU Android 模拟器（核显 Mesa）。gpu 分支自动构建后推 Docker Hub s1oz/dockerify-android（国内比 GHCR 快）以及 ghcr.io。&#13;
 &#13;
 使用：&#13;
-1. GitHub Packages 把 dockerify-android 设为 Public，或在 Unraid 登录 ghcr.io&#13;
-2. Docker → 添加容器 → 选择此模板&#13;
-3. 按需改环境变量后应用&#13;
-4. scrcpy 连接 宿主机IP:5556&#13;
-5. CA Auto Update 勾选此容器即可跟 GHCR latest 自动更新（变量保留）&#13;
+1. GitHub 仓库 Secrets 填 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN&#13;
+2. Docker → 添加容器 → 模板 dockerify-android&#13;
+3. 改环境变量后应用；scrcpy 连 宿主机:5556&#13;
+4. CA Auto Update 勾选此容器，跟 Hub latest（变量保留）&#13;
 &#13;
 数据在 /data，更新镜像不会丢游戏。</Overview>
   <Category>Other:</Category>
