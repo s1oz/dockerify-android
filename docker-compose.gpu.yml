@@ -1,0 +1,12 @@
+# Example: GPU image from this fork. Merge with your local ports/DNS/root as needed.
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+services:
+  dockerify-android:
+    image: ghcr.io/s1oz/dockerify-android:latest
+    environment:
+      GPU_MODE: host
+    devices:
+      - /dev/kvm
+      - /dev/dri:/dev/dri
+    # group_add:
+    #   - "44"  # stat -c %g /dev/dri/renderD128
