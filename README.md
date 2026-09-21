@@ -60,6 +60,7 @@ Access and control the Android emulator directly in your web browser with the in
 - **Easy Setup:** Simple Docker commands to build and run the emulator.
 - **Supervisor Management:** Manages emulator processes with Supervisor for reliability.
 - **Unified Container Logs:** All emulator and boot logs are redirected to Docker's standard log system.
+- **Optional Host GPU:** Set `GPU_MODE=host` and pass `/dev/dri` to render guest GLES on the host GPU (Intel/AMD/NVIDIA via Mesa) instead of SwiftShader.
 
 ## 🛠️ **Prerequisites**
 
@@ -129,6 +130,32 @@ List of devices attached
 localhost:5555	device
 ```
 
+### Host GPU (`GPU_MODE=host`)
+
+The default renderer is SwiftShader (CPU). To use an Intel/AMD/NVIDIA GPU:
+
+1. Pass the DRM device into the container (`/dev/dri`).
+2. Set `GPU_MODE=host`.
+3. If the container is not privileged, add the host GID that owns `/dev/dri` via `group_add`.
+
+```yaml
+environment:
+  GPU_MODE: host
+devices:
+  - /dev/kvm
+  - /dev/dri:/dev/dri
+# group_add:
+#   - "44"  # `stat -c %g /dev/dri/renderD128`
+```
+
+Headless hosts do not need a monitor. The emulator still runs `-no-window`; viewing stays on scrcpy / scrcpy-web. A small Xorg on `/dev/dri/card0` provides GLX (Mesa iris/amdgpu/nouveau). Confirm the guest actually picked the GPU:
+
+```bash
+adb shell dumpsys SurfaceFlinger | grep GLES
+```
+
+You should see the host GPU name (for example `Mesa Intel(R) UHD Graphics 630`), not `Google SwiftShader`.
+
 ### Use scrcpy to Mirror the Emulator Screen
 
 For a native desktop experience, you can use scrcpy:
@@ -150,6 +177,7 @@ scrcpy -s localhost:5555
 | `ROOT_SETUP` | Set to `1` to enable rooting and Magisk. Can be turned on after the first start but cannot be undone without recreating the data volume. | `0` |
 | `GAPPS_SETUP` | Set to `1` to install PICO GAPPS. Can be turned on after the first start but cannot be undone without recreating the data volume. | `0` |
 | `ARM_TRANSLATION` | Set to `1` to enable ARM translation (ndk_translation) for running ARM/ARM64 apps on x86_64. Can be turned on after the first start but cannot be undone without recreating the data volume. | `0` |
+| `GPU_MODE` | Emulator GPU backend. `swiftshader_indirect` (default) is software rendering. `host` uses the host GPU through Mesa. | `swiftshader_indirect` |
 
 
 ## 🔄 **First Boot Process**
@@ -222,6 +250,7 @@ Builds from the `main` branch are published as development images using `edge` a
 - [x] Support Magisk
 - [x] Adding web interface of [scrcpy](https://github.com/Shmayro/ws-scrcpy-docker)
 - [x] Redirect all logs to container stdout/stderr
+- [x] Optional host GPU (`GPU_MODE=host`)
 
 ## 🐞 **Troubleshooting**
 
@@ -255,6 +284,12 @@ Builds from the `main` branch are published as development images using `edge` a
     ```
     Should show: `x86_64,x86,arm64-v8a,armeabi-v7a,armeabi`
   - If you enabled `ARM_TRANSLATION` after the first boot, restart the container to run the install step
+
+- **Guest GLES shows Google SwiftShader:**
+  - `GPU_MODE` defaults to software. Set `GPU_MODE=host` and mount `/dev/dri`.
+  - Check the container can see the render node: `docker exec dockerify-android ls -l /dev/dri`.
+  - Confirm logs contain `Starting headless Xorg` and `Graphics Adapter ... Mesa`, not `llvmpipe`.
+  - Rebuild the image after this change (`docker compose build`); Mesa/Xorg are not in older images.
 
 - **Emulator Not Starting:**
   - **Check Container Logs:**

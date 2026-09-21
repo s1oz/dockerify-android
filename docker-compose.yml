@@ -20,9 +20,13 @@ services:
       ROOT_SETUP: 0 # set to 1 to enable rooting
       GAPPS_SETUP: 0 # set to 1 to install PICO GAPPS
       ARM_TRANSLATION: 1 # set to 1 to enable ARM translation (allows ARM64 apps)
+      # GPU_MODE: host  # use host GPU (needs /dev/dri below); default is swiftshader_indirect
     privileged: true
     devices:
       - /dev/kvm
+      # - /dev/dri:/dev/dri  # required for GPU_MODE=host
+    # group_add:
+    #   - "44"  # host GID of the group that owns /dev/dri (often 'video' or 'render')
 
   scrcpy-web:
     container_name: scrcpy-web

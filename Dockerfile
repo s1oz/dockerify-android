@@ -83,6 +83,33 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY first-boot.sh /root/first-boot.sh
 RUN chmod +x /root/first-boot.sh
 
+# Host GPU userspace (Intel/AMD/NVIDIA via Mesa). Used when GPU_MODE=host.
+# Own layer so the SDK download above stays cached.
+COPY egl-gbm-hook.c /tmp/egl-gbm-hook.c
+COPY xorg-headless.conf /etc/X11/xorg-headless.conf
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc \
+        libgl1-mesa-dri \
+        libgl1 \
+        libglx-mesa0 \
+        libgles2 \
+        libegl1-mesa \
+        mesa-vulkan-drivers \
+        libvulkan1 \
+        xvfb \
+        xserver-xorg-core \
+        xserver-xorg-video-intel \
+        x11-xserver-utils \
+        libxtst6 \
+        libglu1-mesa \
+        libxv1 && \
+    gcc -shared -fPIC -O2 -o /usr/local/lib/libegl-gbm-hook.so /tmp/egl-gbm-hook.c -ldl && \
+    rm -f /tmp/egl-gbm-hook.c && \
+    apt-get purge -y --auto-remove gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the start-emulator script
 COPY start-emulator.sh /root/start-emulator.sh
 RUN chmod +x /root/start-emulator.sh
