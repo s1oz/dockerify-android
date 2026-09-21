@@ -1,3 +1,13 @@
+# Compile the EGL hook without leaving gcc in the runtime image.
+FROM ubuntu:20.04 AS egl-hook
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc \
+        libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY egl-gbm-hook.c /tmp/egl-gbm-hook.c
+RUN gcc -shared -fPIC -O2 -o /libegl-gbm-hook.so /tmp/egl-gbm-hook.c -ldl
+
 FROM ubuntu:20.04
 
 # Install necessary packages
@@ -84,29 +94,28 @@ COPY first-boot.sh /root/first-boot.sh
 RUN chmod +x /root/first-boot.sh
 
 # Host GPU userspace (Intel/AMD/NVIDIA via Mesa). Used when GPU_MODE=host.
-# Own layer so the SDK download above stays cached.
-COPY egl-gbm-hook.c /tmp/egl-gbm-hook.c
+# Own layer so the SDK download above stays cached. modesetting is in
+# xserver-xorg-core; the intel DDX package is not required.
+COPY --from=egl-hook /libegl-gbm-hook.so /usr/local/lib/libegl-gbm-hook.so
 COPY xorg-headless.conf /etc/X11/xorg-headless.conf
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        gcc \
+        -o Dpkg::Options::=--force-confdef \
+        -o Dpkg::Options::=--force-confold \
         libgl1-mesa-dri \
         libgl1 \
         libglx-mesa0 \
         libgles2 \
         libegl1-mesa \
+        libgbm1 \
         mesa-vulkan-drivers \
         libvulkan1 \
         xvfb \
         xserver-xorg-core \
-        xserver-xorg-video-intel \
         x11-xserver-utils \
         libxtst6 \
         libglu1-mesa \
         libxv1 && \
-    gcc -shared -fPIC -O2 -o /usr/local/lib/libegl-gbm-hook.so /tmp/egl-gbm-hook.c -ldl && \
-    rm -f /tmp/egl-gbm-hook.c && \
-    apt-get purge -y --auto-remove gcc && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
